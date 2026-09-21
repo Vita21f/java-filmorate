@@ -1,67 +1,67 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
-import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @RestController
+@Validated
 @RequestMapping("/films")
 public class FilmController {
+    private final FilmService filmService;
 
-    private final Map<Long, Film> films = new HashMap<>();
-
-    private static final LocalDate DATE_OF_FIRST_FILM = LocalDate.of(1895, 12, 28);
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping
     public Collection<Film> findAll() {
-        return films.values();
+        return filmService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Film getById(@PathVariable Long id) {
+        return filmService.getById(id);
+    }
+
+    @GetMapping("/popular")
+    public Collection<Film> getPopular(@Positive @RequestParam(defaultValue = "10") int count) {
+        return filmService.getPopular(count);
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
         log.info("Новый фильм для добавления: {}", film);
-        validate(film);
-        film.setId(ControllerUtils.getNextId(films));
-        films.put(film.getId(), film);
-        log.info("Фильм успешно добавлен: {}", film);
-        return film;
+        Film created = filmService.create(film);
+        log.info("Фильм успешно добавлен: {}", created);
+        return created;
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film newFilm) {
         log.info("Новый фильм для обновления: {}", newFilm);
-
-        if (newFilm.getId() == null) {
-            throw new ValidationException("Поле id обязательно для обновления");
-        }
-        validate(newFilm);
-        if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = films.get(newFilm.getId());
-
-            oldFilm.setName(newFilm.getName());
-            oldFilm.setDescription(newFilm.getDescription());
-            oldFilm.setReleaseDate(newFilm.getReleaseDate());
-            oldFilm.setDuration(newFilm.getDuration());
-
-            log.info("Фильм успешно обновлен: {}", oldFilm);
-            return oldFilm;
-        }
-        throw new NotFoundException("Фильм с id = " + newFilm.getId() + " не найден");
+        Film updated = filmService.update(newFilm);
+        log.info("Фильм успешно обновлен: {}", updated);
+        return updated;
     }
 
-    private void validate(Film film) {
-        if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(DATE_OF_FIRST_FILM)) {
-            throw new ValidationException("Дата релиза должна быть не ранее выпуска первого фильма в истории");
-        }
+    @PutMapping("/{id}/like/{userId}")
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.removeLike(id, userId);
     }
 }
 
