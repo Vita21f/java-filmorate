@@ -8,6 +8,7 @@ import java.util.*;
 @Component
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> films = new HashMap<>();
+    private long nextId = 0;
 
     @Override
     public Collection<Film> findAll() {
@@ -32,12 +33,12 @@ public class InMemoryFilmStorage implements FilmStorage {
         return Optional.ofNullable(films.get(id));
     }
 
+    @Override
+    public void delete(Long id) {
+        films.remove(id);
+    }
+
     private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+        return ++nextId;
     }
 }

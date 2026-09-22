@@ -48,9 +48,9 @@ public class ErrorHandler {
         return new ErrorResponse("Ошибка валидации", e.getMessage());
     }
 
-    @ExceptionHandler(Throwable.class)
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleThrowable(Throwable e) {
+    public ErrorResponse handleUnexpected(Exception e) {
         log.error("Произошла непредвиденная ошибка: {}", e.getMessage(), e);
         return new ErrorResponse("Непредвиденная ошибка", "Попробуйте позже");
     }

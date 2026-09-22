@@ -82,6 +82,17 @@ public class UserService {
                 .toList();
     }
 
+    public void delete(Long id) {
+        User user = getById(id);
+
+        for (Long friendId : user.getFriends()) {
+            User friend = getById(friendId);
+            friend.getFriends().remove(id);
+        }
+
+        userStorage.delete(id);
+    }
+
     private String getDisplayName(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             return user.getLogin();

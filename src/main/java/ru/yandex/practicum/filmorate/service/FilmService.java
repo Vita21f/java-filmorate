@@ -73,6 +73,11 @@ public class FilmService {
                 .toList();
     }
 
+    public void delete(Long id) {
+        getById(id);
+        filmStorage.delete(id);
+    }
+
     private void validate(Film film) {
         if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(DATE_OF_FIRST_FILM)) {
             throw new ValidationException("Дата релиза должна быть не ранее выпуска первого фильма в истории");
