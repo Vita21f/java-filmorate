@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
@@ -55,8 +56,8 @@ public class UserService {
         User user = getById(userId);
         User friendUser = getById(friendId);
 
-        user.getFriends().add(friendId);
-        friendUser.getFriends().add(userId);
+        user.getFriends().put(friendId, FriendshipStatus.PENDING);
+        friendUser.getFriends().put(userId, FriendshipStatus.PENDING);
     }
 
     public void removeFriend(Long userId, Long friendId) {
@@ -68,15 +69,16 @@ public class UserService {
     }
 
     public Collection<User> getFriends(Long userId) {
-        return getById(userId).getFriends().stream()
+        return getById(userId).getFriends().keySet()
+                .stream()
                 .map(this::getById)
                 .toList();
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        Set<Long> otherFriends = getById(otherId).getFriends();
+        Set<Long> otherFriends = getById(otherId).getFriends().keySet();
 
-        return getById(userId).getFriends().stream()
+        return getById(userId).getFriends().keySet().stream()
                 .filter(otherFriends::contains)
                 .map(this::getById)
                 .toList();
@@ -85,7 +87,7 @@ public class UserService {
     public void delete(Long id) {
         User user = getById(id);
 
-        for (Long friendId : user.getFriends()) {
+        for (Long friendId : user.getFriends().keySet()) {
             User friend = getById(friendId);
             friend.getFriends().remove(id);
         }
