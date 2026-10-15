@@ -1,8 +1,59 @@
 ## Схема базы данных
 
-![Схема базы данных Filmorate](https://private-user-images.githubusercontent.com/271237423/674500179-ea64f789-1830-4f0b-b34e-40336cca3bdf.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3OTIwNTk5NDQsIm5iZiI6MTc5MjA1OTY0NCwicGF0aCI6Ii8yNzEyMzc0MjMvNjc0NTAwMTc5LWVhNjRmNzg5LTE4MzAtNGYwYi1iMzRlLTQwMzM2Y2NhM2JkZi5wbmc_WC1BbXotQWxnb3JpdGhtPUFXUzQtSE1BQy1TSEEyNTYmWC1BbXotQ3JlZGVudGlhbD1BS0lBVkNPRFlMU0E1M1BRSzRaQSUyRjIwMjYxMDE1JTJGdXMtZWFzdC0xJTJGczMlMkZhd3M0X3JlcXVlc3QmWC1BbXotRGF0ZT0yMDI2MTAxNVQxMDIwNDRaJlgtQW16LUV4cGlyZXM9MzAwJlgtQW16LVNpZ25hdHVyZT0zYmE1NzU2MTIxMGY2NjM2N2Q1NjJhNGZmNDQ4YmIzMjRlMzRkNTMzZDVjZTQ0YmIxZjQ2ZjVmMDU2ZjM4MzVlJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZyZXNwb25zZS1jb250ZW50LXR5cGU9aW1hZ2UlMkZwbmcifQ.kDo45q8r8QrlxQejpXaCRG9JPX2Y98XutfKjluG8g88)
+![Схема базы данных Filmorate](https://github.com/user-attachments/assets/ea64f789-1830-4f0b-b34e-40336cca3bdf)
+### Исходник схемы (DBML)
+Схема описана на [DBML](https://dbml.dbdiagram.io/) — её можно вставить в [dbdiagram.io](https://dbdiagram.io/d) и получить диаграмму.
 
-Исходник схемы: [docs/schema.dbml](docs/schema.dbml)
+```dbml
+Table mpa {
+  id bigint [pk]
+  name varchar [not null]
+}
+Table genres {
+  id bigint [pk]
+  name varchar [not null]
+}
+Table users {
+  id bigint [pk, increment]
+  email varchar [not null]
+  login varchar [not null]
+  name varchar
+  birthday date
+}
+Table films {
+  id bigint [pk, increment]
+  name varchar [not null]
+  description varchar(200)
+  release_date date [not null]
+  duration int
+  mpa_id bigint [ref: > mpa.id, not null]
+}
+Table friendship {
+  user_id bigint [ref: > users.id]
+  friend_id bigint [ref: > users.id]
+  status varchar [not null]
+
+  indexes {
+    (user_id, friend_id) [pk]
+  }
+}
+Table likes {
+  film_id bigint [ref: > films.id]
+  user_id bigint [ref: > users.id]
+
+  indexes {
+    (film_id, user_id) [pk]
+  }
+}
+Table film_genres {
+  film_id bigint [ref: > films.id]
+  genre_id bigint [ref: > genres.id]
+
+  indexes {
+    (film_id, genre_id) [pk]
+  }
+}
+```
 
 ### Таблицы
 
