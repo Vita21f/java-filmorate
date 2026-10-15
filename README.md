@@ -1,6 +1,7 @@
 ## Схема базы данных
 
-![Схема базы данных Filmorate](docs/filmorate.png)
+![Схема базы данных Filmorate](<img width="1313" height="732" alt="filmorate" src="https://github.com/user-attachments/assets/ea64f789-1830-4f0b-b34e-40336cca3bdf" />
+)
 
 Исходник схемы: [docs/schema.dbml](docs/schema.dbml)
 
