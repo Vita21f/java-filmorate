@@ -1,10 +1,12 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
@@ -16,11 +18,20 @@ public class FilmService {
     private static final LocalDate DATE_OF_FIRST_FILM = LocalDate.of(1895, 12, 28);
     private final FilmStorage filmStorage;
     private final UserService userService;
+    private final MpaService mpaService;
+    private final GenreService genreService;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
+    public FilmService(
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            UserService userService,
+            MpaService mpaService,
+            GenreService genreService
+    ) {
         this.filmStorage = filmStorage;
         this.userService = userService;
+        this.mpaService = mpaService;
+        this.genreService = genreService;
     }
 
     public Collection<Film> findAll() {
@@ -48,22 +59,26 @@ public class FilmService {
         oldFilm.setDescription(newFilm.getDescription());
         oldFilm.setReleaseDate(newFilm.getReleaseDate());
         oldFilm.setDuration(newFilm.getDuration());
+        oldFilm.setMpa(newFilm.getMpa());
+
+        oldFilm.getGenres().clear();
+        oldFilm.getGenres().addAll(newFilm.getGenres());
 
         return filmStorage.update(oldFilm);
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = getById(filmId);
-        userService.getById(userId); // проверяем, что пользователь существует
+        getById(filmId);
+        userService.getById(userId);
 
-        film.getLikes().add(userId);
+        filmStorage.addLike(filmId, userId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = getById(filmId);
-        userService.getById(userId); // проверяем, что пользователь существует
+        getById(filmId);
+        userService.getById(userId);
 
-        film.getLikes().remove(userId);
+        filmStorage.removeLike(filmId, userId);
     }
 
     public Collection<Film> getPopular(int count) {
@@ -81,6 +96,24 @@ public class FilmService {
     private void validate(Film film) {
         if (film.getReleaseDate() != null && film.getReleaseDate().isBefore(DATE_OF_FIRST_FILM)) {
             throw new ValidationException("Дата релиза должна быть не ранее выпуска первого фильма в истории");
+        }
+
+        if (film.getMpa() == null || film.getMpa().getId() == null) {
+            throw new ValidationException(
+                    "Необходимо указать идентификатор рейтинга"
+            );
+        }
+
+        mpaService.getById(film.getMpa().getId());
+
+        for (Genre genre : film.getGenres()) {
+            if (genre == null || genre.getId() == null) {
+                throw new ValidationException(
+                        "Необходимо указать идентификатор жанра"
+                );
+            }
+
+            genreService.getById(genre.getId());
         }
     }
 }

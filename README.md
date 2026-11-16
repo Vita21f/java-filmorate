@@ -25,7 +25,7 @@ Table films {
   name varchar [not null]
   description varchar(200)
   release_date date [not null]
-  duration int
+  duration int [not null]
   mpa_id bigint [ref: > mpa.id, not null]
 }
 Table friendship {

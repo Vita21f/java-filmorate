@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -16,7 +17,8 @@ public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(
+            @Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -50,22 +52,22 @@ public class UserService {
 
     public void addFriend(Long userId, Long friendId) {
         if (userId.equals(friendId)) {
-            throw new ValidationException("Нельзя добавить самого себя в друзья");
+            throw new ValidationException(
+                    "Нельзя добавить самого себя в друзья"
+            );
         }
 
-        User user = getById(userId);
-        User friendUser = getById(friendId);
+        getById(userId);
+        getById(friendId);
 
-        user.getFriends().put(friendId, FriendshipStatus.PENDING);
-        friendUser.getFriends().put(userId, FriendshipStatus.PENDING);
+        userStorage.addFriend(userId, friendId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        User user = getById(userId);
-        User friendUser = getById(friendId);
+        getById(userId);
+        getById(friendId);
 
-        user.getFriends().remove(friendId);
-        friendUser.getFriends().remove(userId);
+        userStorage.removeFriend(userId, friendId);
     }
 
     public Collection<User> getFriends(Long userId) {
@@ -85,13 +87,7 @@ public class UserService {
     }
 
     public void delete(Long id) {
-        User user = getById(id);
-
-        for (Long friendId : user.getFriends().keySet()) {
-            User friend = getById(friendId);
-            friend.getFriends().remove(id);
-        }
-
+        getById(id);
         userStorage.delete(id);
     }
 
