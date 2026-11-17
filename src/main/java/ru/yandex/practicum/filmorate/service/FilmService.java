@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Comparator;
 
 @Service
 public class FilmService {
@@ -82,10 +81,13 @@ public class FilmService {
     }
 
     public Collection<Film> getPopular(int count) {
-        return filmStorage.findAll().stream()
-                .sorted(Comparator.comparingInt((Film film) -> film.getLikes().size()).reversed())
-                .limit(count)
-                .toList();
+        if (count < 0) {
+            throw new ValidationException(
+                    "Количество фильмов не может быть отрицательным"
+            );
+        }
+
+        return filmStorage.findPopular(count);
     }
 
     public void delete(Long id) {

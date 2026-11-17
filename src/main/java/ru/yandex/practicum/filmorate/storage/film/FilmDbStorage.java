@@ -201,6 +201,24 @@ public class FilmDbStorage implements FilmStorage {
         jdbc.update(sql, filmId, userId);
     }
 
+    @Override
+    public Collection<Film> findPopular(int count) {
+        String sql = SELECT_FILMS + """
+             LEFT JOIN (
+                 SELECT film_id, COUNT(*) AS likes_count
+                 FROM likes
+                 GROUP BY film_id
+             ) AS popularity ON popularity.film_id = f.id
+             ORDER BY COALESCE(popularity.likes_count, 0) DESC, f.id ASC
+             LIMIT ?
+            """;
+
+        List<Film> films = jdbc.query(sql, mapper, count);
+        loadRelations(films);
+
+        return films;
+    }
+
     private void saveGenres(Long filmId, Collection<Genre> genres) {
         String sql = """
             INSERT INTO film_genres (film_id, genre_id)

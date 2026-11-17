@@ -424,6 +424,69 @@ class FilmDbStorageTest {
                 );
     }
 
+    @Test
+    void findPopular_shouldOrderByLikesLimitAndLoadRelations() {
+        Film unpopular = filmStorage.create(newFilm("Без лайков", 1L));
+        Film middle = filmStorage.create(newFilm("Один лайк", 1L));
+        Film popular = filmStorage.create(
+                newFilm("Два лайка", 3L, 4L, 2L)
+        );
+
+        User anna = createUser("anna");
+        User boris = createUser("boris");
+
+        filmStorage.addLike(middle.getId(), anna.getId());
+        filmStorage.addLike(popular.getId(), anna.getId());
+        filmStorage.addLike(popular.getId(), boris.getId());
+
+        List<Film> result = List.copyOf(filmStorage.findPopular(2));
+
+        assertThat(result)
+                .extracting(Film::getId)
+                .containsExactly(popular.getId(), middle.getId());
+
+        assertThat(result.get(0).getMpa().getName()).isEqualTo("PG-13");
+
+        assertThat(result.get(0).getGenres())
+                .extracting(Genre::getId, Genre::getName)
+                .containsExactly(
+                        tuple(2L, "Драма"),
+                        tuple(4L, "Триллер")
+                );
+
+        assertThat(result.get(0).getLikes())
+                .containsExactlyInAnyOrder(anna.getId(), boris.getId());
+
+        assertThat(filmStorage.findPopular(10))
+                .extracting(Film::getId)
+                .containsExactly(
+                        popular.getId(),
+                        middle.getId(),
+                        unpopular.getId()
+                );
+    }
+
+    @Test
+    void findPopular_shouldOrderById_whenLikesAreEqual() {
+        Film first = filmStorage.create(newFilm("Первый", 1L));
+        Film second = filmStorage.create(newFilm("Второй", 1L));
+        User anna = createUser("anna");
+
+        filmStorage.addLike(first.getId(), anna.getId());
+        filmStorage.addLike(second.getId(), anna.getId());
+
+        assertThat(filmStorage.findPopular(10))
+                .extracting(Film::getId)
+                .containsExactly(first.getId(), second.getId());
+    }
+
+    @Test
+    void findPopular_shouldReturnEmpty_whenCountIsZero() {
+        filmStorage.create(newFilm("Фильм", 1L));
+
+        assertThat(filmStorage.findPopular(0)).isEmpty();
+    }
+
     private User createUser(String login) {
         User user = new User();
 

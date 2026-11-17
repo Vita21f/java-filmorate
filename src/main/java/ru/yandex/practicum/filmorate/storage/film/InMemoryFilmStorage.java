@@ -66,4 +66,18 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         film.getLikes().remove(userId);
     }
+
+    @Override
+    public Collection<Film> findPopular(int count) {
+        return films.values().stream()
+                .sorted(
+                        Comparator.comparingInt(
+                                        (Film film) -> film.getLikes().size()
+                                )
+                                .reversed()
+                                .thenComparing(Film::getId)
+                )
+                .limit(count)
+                .toList();
+    }
 }

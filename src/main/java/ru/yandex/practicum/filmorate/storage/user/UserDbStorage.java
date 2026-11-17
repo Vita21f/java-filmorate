@@ -201,6 +201,45 @@ public class UserDbStorage implements UserStorage {
         );
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        String sql = "SELECT COUNT(*) FROM users WHERE id = ?";
+
+        Integer count = jdbc.queryForObject(sql, Integer.class, id);
+
+        return count != null && count > 0;
+    }
+
+    @Override
+    public Collection<User> findFriends(Long userId) {
+        String sql = """
+            SELECT u.id, u.email, u.login, u.name, u.birthday
+            FROM friendship AS f
+            JOIN users AS u ON u.id = f.friend_id
+            WHERE f.user_id = ?
+            ORDER BY u.id
+            """;
+
+        return jdbc.query(sql, mapper, userId);
+    }
+
+    @Override
+    public Collection<User> findCommonFriends(Long userId, Long otherId) {
+        String sql = """
+            SELECT u.id, u.email, u.login, u.name, u.birthday
+            FROM friendship AS first_friendship
+            JOIN friendship AS second_friendship
+                ON first_friendship.friend_id = second_friendship.friend_id
+            JOIN users AS u
+                ON u.id = first_friendship.friend_id
+            WHERE first_friendship.user_id = ?
+              AND second_friendship.user_id = ?
+            ORDER BY u.id
+            """;
+
+        return jdbc.query(sql, mapper, userId, otherId);
+    }
+
     private void loadFriends(Collection<User> users) {
         if (users.isEmpty()) {
             return;

@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
-import java.util.Set;
 
 @Service
 public class UserService {
@@ -70,19 +69,24 @@ public class UserService {
     }
 
     public Collection<User> getFriends(Long userId) {
-        return getById(userId).getFriends().keySet()
-                .stream()
-                .map(this::getById)
-                .toList();
+        checkUserExists(userId);
+
+        return userStorage.findFriends(userId);
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        Set<Long> otherFriends = getById(otherId).getFriends().keySet();
+        checkUserExists(userId);
+        checkUserExists(otherId);
 
-        return getById(userId).getFriends().keySet().stream()
-                .filter(otherFriends::contains)
-                .map(this::getById)
-                .toList();
+        return userStorage.findCommonFriends(userId, otherId);
+    }
+
+    private void checkUserExists(Long id) {
+        if (!userStorage.existsById(id)) {
+            throw new NotFoundException(
+                    "Пользователь с id = " + id + " не найден"
+            );
+        }
     }
 
     public void delete(Long id) {

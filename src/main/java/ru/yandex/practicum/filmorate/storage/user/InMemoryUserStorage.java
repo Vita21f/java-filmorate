@@ -97,6 +97,41 @@ public class InMemoryUserStorage implements UserStorage {
         }
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
+    }
+
+    @Override
+    public Collection<User> findFriends(Long userId) {
+        User user = users.get(userId);
+
+        if (user == null) {
+            return List.of();
+        }
+
+        return user.getFriends().keySet().stream()
+                .sorted()
+                .map(users::get)
+                .toList();
+    }
+
+    @Override
+    public Collection<User> findCommonFriends(Long userId, Long otherId) {
+        User user = users.get(userId);
+        User other = users.get(otherId);
+
+        if (user == null || other == null) {
+            return List.of();
+        }
+
+        return user.getFriends().keySet().stream()
+                .filter(other.getFriends()::containsKey)
+                .sorted()
+                .map(users::get)
+                .toList();
+    }
+
     private long getNextId() {
         return ++nextId;
     }

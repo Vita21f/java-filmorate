@@ -192,6 +192,58 @@ class UserDbStorageTest {
                 .containsExactly(boris.getId());
     }
 
+    @Test
+    void existsById_shouldDistinguishExistingAndMissingUsers() {
+        User user = userStorage.create(newUser("anna"));
+
+        assertThat(userStorage.existsById(user.getId())).isTrue();
+        assertThat(userStorage.existsById(-1L)).isFalse();
+    }
+
+    @Test
+    void findFriends_shouldReturnOnlyOutgoingFriends() {
+        User anna = userStorage.create(newUser("anna"));
+        User boris = userStorage.create(newUser("boris"));
+        User clara = userStorage.create(newUser("clara"));
+
+        userStorage.addFriend(anna.getId(), boris.getId());
+        userStorage.addFriend(clara.getId(), anna.getId());
+
+        assertThat(userStorage.findFriends(anna.getId()))
+                .extracting(User::getId)
+                .containsExactly(boris.getId());
+
+        assertThat(userStorage.findFriends(boris.getId())).isEmpty();
+    }
+
+    @Test
+    void findCommonFriends_shouldReturnOnlyIntersection() {
+        User anna = userStorage.create(newUser("anna"));
+        User boris = userStorage.create(newUser("boris"));
+        User clara = userStorage.create(newUser("clara"));
+        User denis = userStorage.create(newUser("denis"));
+
+        userStorage.addFriend(anna.getId(), clara.getId());
+        userStorage.addFriend(anna.getId(), denis.getId());
+        userStorage.addFriend(boris.getId(), clara.getId());
+
+        assertThat(userStorage.findCommonFriends(
+                anna.getId(), boris.getId()
+        ))
+                .extracting(User::getId)
+                .containsExactly(clara.getId());
+
+        assertThat(userStorage.findCommonFriends(
+                boris.getId(), anna.getId()
+        ))
+                .extracting(User::getId)
+                .containsExactly(clara.getId());
+
+        assertThat(userStorage.findCommonFriends(
+                anna.getId(), denis.getId()
+        )).isEmpty();
+    }
+
     private User newUser(String login) {
         User user = new User();
 
