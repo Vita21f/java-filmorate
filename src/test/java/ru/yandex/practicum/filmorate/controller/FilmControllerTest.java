@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.GenreService;
+import ru.yandex.practicum.filmorate.service.MpaService;
 import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
@@ -14,16 +17,31 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class FilmControllerTest {
     private FilmController controller;
 
     @BeforeEach
     void beforeEach() {
+        MpaService mpaService = mock(MpaService.class);
+        GenreService genreService = mock(GenreService.class);
+
+        Mpa mpa = new Mpa();
+        mpa.setId(1L);
+        mpa.setName("G");
+
+        when(mpaService.getById(1L)).thenReturn(mpa);
+
         controller = new FilmController(
                 new FilmService(
                         new InMemoryFilmStorage(),
-                        new UserService(new InMemoryUserStorage())));
+                        new UserService(new InMemoryUserStorage()),
+                        mpaService,
+                        genreService
+                )
+        );
     }
 
     @Test
@@ -112,6 +130,10 @@ class FilmControllerTest {
         film.setDescription("описание");
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(100);
+
+        Mpa mpa = new Mpa();
+        mpa.setId(1L);
+        film.setMpa(mpa);
 
         return film;
     }

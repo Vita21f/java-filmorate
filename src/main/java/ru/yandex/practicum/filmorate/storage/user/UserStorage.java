@@ -15,4 +15,14 @@ public interface UserStorage {
     Optional<User> findById(Long id);
 
     void delete(Long id);
+
+    void addFriend(Long userId, Long friendId);
+
+    void removeFriend(Long userId, Long friendId);
+
+    boolean existsById(Long id);
+
+    Collection<User> findFriends(Long userId);
+
+    Collection<User> findCommonFriends(Long userId, Long otherId);
 }
